@@ -1,0 +1,42 @@
+name: Deploy Static HTML to AWS S3
+
+on:
+  push:
+    branches:
+      - master  # change to 'main' if your repo uses 'main'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Verify AWS CLI is available (optional but useful for debugging)
+      - name: Verify AWS CLI installation
+        run: aws --version
+
+      # Step 3: Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # Step 4: Sync files to S3 bucket
+      - name: Sync files to S3
+        run: |
+          # Sync local directory to S3 bucket
+          # Remove '--acl public-read' if your bucket enforces ownership
+          aws s3 sync ./ s3://demo-ci-cd-bucket4321/ --delete
+
+      # Step 5: Invalidate CloudFront cache (optional)
+      # Uncomment and configure if you're using CloudFront
+      # - name: Invalidate CloudFront cache
+      #   run: |
+      #     aws cloudfront create-invalidation \
+      #       --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+      #       --paths "/*"
